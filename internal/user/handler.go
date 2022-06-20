@@ -12,6 +12,7 @@ type Handler struct {
 
 type Service interface {
 	Create(ctx context.Context, req *CreateUserRequest) error
+	Update(ctx context.Context, userID string, req *UpdateUserRequest) error
 }
 
 func NewHandler(service Service) Handler {
@@ -20,17 +21,32 @@ func NewHandler(service Service) Handler {
 
 func (h Handler) RegisterRoutes(app *fiber.App) {
 	app.Post("/users", h.CreateUserHandler)
+	app.Put("/users/:userID", h.UpdateUserHandler)
 }
 
 func (h Handler) CreateUserHandler(ctx *fiber.Ctx) error {
-	cur := CreateUserRequest{}
-	if err := ctx.BodyParser(&cur); err != nil {
+	createUserReq := CreateUserRequest{}
+	if err := ctx.BodyParser(&createUserReq); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(err)
 	}
-	err := h.service.Create(ctx.Context(), &cur)
+	err := h.service.Create(ctx.Context(), &createUserReq)
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(err)
 	}
 	ctx.Status(http.StatusCreated)
+	return nil
+}
+
+func (h Handler) UpdateUserHandler(ctx *fiber.Ctx) error {
+	updateUserReq := UpdateUserRequest{}
+	userID := ctx.Params("userID")
+	if err := ctx.BodyParser(&updateUserReq); err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(err)
+	}
+	err := h.service.Update(ctx.Context(), userID, &updateUserReq)
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(err)
+	}
+	ctx.Status(http.StatusOK)
 	return nil
 }

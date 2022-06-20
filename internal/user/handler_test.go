@@ -89,7 +89,85 @@ func TestHandler_CreateUserHandler(t *testing.T) {
 			})
 		})
 	})
+}
 
+func TestHandler_UpdateUserHandler(t *testing.T) {
+	userID := "1"
+	path := "/users/" + userID
+	Convey("Given update user request is invalid", t, func() {
+		app := createTestApp()
+		c := gomock.NewController(t)
+		defer c.Finish()
+		updateUserReq := `{`
+		Convey("When update request is required", func() {
+			mockService := mocks.NewMockService(c)
+
+			handler := user.NewHandler(mockService)
+			handler.RegisterRoutes(app)
+
+			req := NewHTTPRequestWithJSON(http.MethodPut, path, updateUserReq)
+			actualResponse, _ := app.Test(req)
+			defer actualResponse.Body.Close()
+			Convey("Then response status code should be 400", func() {
+				So(actualResponse.StatusCode, ShouldEqual, http.StatusBadRequest)
+			})
+		})
+	})
+	Convey("Given update user request is valid", t, func() {
+		app := createTestApp()
+		c := gomock.NewController(t)
+		defer c.Finish()
+		updateUserReq := user.UpdateUserRequest{
+			FirstName: "John",
+			LastName:  "Doe",
+			Nickname:  "doe",
+			Password:  "123456",
+			Email:     "john@doe.com",
+			Country:   "UK",
+		}
+		Convey("When update method is called with valid request", func() {
+			mockService := mocks.NewMockService(c)
+			mockService.EXPECT().Update(gomock.Any(), userID, &updateUserReq).Return(nil)
+
+			handler := user.NewHandler(mockService)
+			handler.RegisterRoutes(app)
+
+			req := NewHTTPRequestWithJSON(http.MethodPut, path, updateUserReq)
+			actualResponse, err := app.Test(req)
+			defer actualResponse.Body.Close()
+			So(err, ShouldBeNil)
+			Convey("Then response status code should be 200", func() {
+				So(actualResponse.StatusCode, ShouldEqual, http.StatusOK)
+			})
+		})
+	})
+	Convey("Given update user request is valid", t, func() {
+		app := createTestApp()
+		c := gomock.NewController(t)
+		defer c.Finish()
+		updateUserReq := user.UpdateUserRequest{
+			FirstName: "John",
+			LastName:  "Doe",
+			Nickname:  "doe",
+			Password:  "123456",
+			Email:     "john@doe.com",
+			Country:   "UK",
+		}
+		Convey("When update method is called with valid request", func() {
+			mockService := mocks.NewMockService(c)
+			mockService.EXPECT().Update(gomock.Any(), userID, &updateUserReq).Return(errors.New("error"))
+
+			handler := user.NewHandler(mockService)
+			handler.RegisterRoutes(app)
+
+			req := NewHTTPRequestWithJSON(http.MethodPut, path, updateUserReq)
+			actualResponse, _ := app.Test(req)
+			defer actualResponse.Body.Close()
+			Convey("Then response status code should be 500", func() {
+				So(actualResponse.StatusCode, ShouldEqual, http.StatusInternalServerError)
+			})
+		})
+	})
 }
 
 func createTestApp() *fiber.App {
