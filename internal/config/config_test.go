@@ -18,6 +18,14 @@ func Test_New(t *testing.T) {
 			Server: config.Server{
 				Port: ":3001",
 			},
+			Mongo: config.Mongo{
+				Host: "localhost",
+				Name: "faceit-task-dev",
+				Port: 27017,
+				Collections: config.Collections{
+					Users: "users",
+				},
+			},
 		}
 
 		assert.Equal(t, expectedConfig, actualConfig)

@@ -8,4 +8,5 @@ require (
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.7.1
+	go.mongodb.org/mongo-driver v1.9.1 // indirect
 )

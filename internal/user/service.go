@@ -2,17 +2,17 @@ package user
 
 import "context"
 
-type Repository interface {
+type Store interface {
 	Create(ctx context.Context, cu *User) error
 	Update(ctx context.Context, cu *User) error
 	Delete(ctx context.Context, userID string) error
 }
 type service struct {
-	repo Repository
+	store Store
 }
 
-func NewService(repo Repository) Service {
-	return &service{repo: repo}
+func NewService(store Store) Service {
+	return &service{store: store}
 }
 
 func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
@@ -24,7 +24,7 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 		Email:     req.Email,
 		Country:   req.Country,
 	}
-	return s.repo.Create(ctx, user)
+	return s.store.Create(ctx, user)
 }
 
 func (s service) Update(ctx context.Context, userID string, req *UpdateUserRequest) error {
@@ -37,9 +37,9 @@ func (s service) Update(ctx context.Context, userID string, req *UpdateUserReque
 		Email:     req.Email,
 		Country:   req.Country,
 	}
-	return s.repo.Update(ctx, user)
+	return s.store.Update(ctx, user)
 }
 
 func (s service) Delete(ctx context.Context, userID string) error {
-	return s.repo.Delete(ctx, userID)
+	return s.store.Delete(ctx, userID)
 }

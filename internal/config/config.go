@@ -8,6 +8,7 @@ import (
 type Config struct {
 	Appname string
 	Server  Server
+	Mongo   Mongo
 }
 
 type Server struct {
