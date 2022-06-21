@@ -170,6 +170,50 @@ func TestHandler_UpdateUserHandler(t *testing.T) {
 	})
 }
 
+func TestHandler_DeleteUserHandler(t *testing.T) {
+	userID := "1"
+	path := "/users/" + userID
+	Convey("Given delete user request is valid", t, func() {
+		app := createTestApp()
+		c := gomock.NewController(t)
+		defer c.Finish()
+		Convey("When delete method is called with valid request", func() {
+			mockService := mocks.NewMockService(c)
+			mockService.EXPECT().Delete(gomock.Any(), userID).Return(nil)
+
+			handler := user.NewHandler(mockService)
+			handler.RegisterRoutes(app)
+
+			req := NewHTTPRequestWithJSON(http.MethodDelete, path, nil)
+			actualResponse, _ := app.Test(req)
+			defer actualResponse.Body.Close()
+			Convey("Then response status code should be 200", func() {
+				So(actualResponse.StatusCode, ShouldEqual, http.StatusOK)
+			})
+		})
+	})
+	Convey("Given delete user request is valid", t, func() {
+		app := createTestApp()
+		c := gomock.NewController(t)
+		defer c.Finish()
+		Convey("When delete method is called with valid request", func() {
+			mockService := mocks.NewMockService(c)
+			mockService.EXPECT().Delete(gomock.Any(), userID).Return(errors.New("error"))
+
+			handler := user.NewHandler(mockService)
+			handler.RegisterRoutes(app)
+
+			req := NewHTTPRequestWithJSON(http.MethodDelete, path, nil)
+			actualResponse, _ := app.Test(req)
+			defer actualResponse.Body.Close()
+			Convey("Then response status code should be 500", func() {
+				So(actualResponse.StatusCode, ShouldEqual, http.StatusInternalServerError)
+			})
+		})
+	})
+
+}
+
 func createTestApp() *fiber.App {
 	return fiber.New()
 }

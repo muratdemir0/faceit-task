@@ -5,6 +5,7 @@ import "context"
 type Repository interface {
 	Create(ctx context.Context, cu *User) error
 	Update(ctx context.Context, cu *User) error
+	Delete(ctx context.Context, userID string) error
 }
 type service struct {
 	repo Repository
@@ -37,4 +38,8 @@ func (s service) Update(ctx context.Context, userID string, req *UpdateUserReque
 		Country:   req.Country,
 	}
 	return s.repo.Update(ctx, user)
+}
+
+func (s service) Delete(ctx context.Context, userID string) error {
+	return s.repo.Delete(ctx, userID)
 }

@@ -130,7 +130,38 @@ func TestService_Update(t *testing.T) {
 			mockUserRepo.EXPECT().Update(gomock.Any(), cu).Return(errors.New("error"))
 			service := user.NewService(mockUserRepo)
 			err := service.Update(context.TODO(), userID, updateUserReq)
-			Convey("Then repo should be return an error", func() {
+			Convey("Then repo should return an error", func() {
+				So(err, ShouldNotBeNil)
+			})
+		})
+	})
+}
+
+func TestService_Delete(t *testing.T) {
+	userID := "123"
+	Convey("Given user id", t, func() {
+		c := gomock.NewController(t)
+		defer c.Finish()
+		mockUserRepo := mocks.NewMockRepository(c)
+		Convey("When repo's delete method is called", func() {
+			mockUserRepo.EXPECT().Delete(gomock.Any(), userID).Return(nil)
+			service := user.NewService(mockUserRepo)
+			err := service.Delete(context.TODO(), userID)
+			Convey("Then repo should be deleted", func() {
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+
+	Convey("Given user id", t, func() {
+		c := gomock.NewController(t)
+		defer c.Finish()
+		mockUserRepo := mocks.NewMockRepository(c)
+		Convey("When repo's delete method is called", func() {
+			mockUserRepo.EXPECT().Delete(gomock.Any(), userID).Return(errors.New("error"))
+			service := user.NewService(mockUserRepo)
+			err := service.Delete(context.TODO(), userID)
+			Convey("Then repo should return an error", func() {
 				So(err, ShouldNotBeNil)
 			})
 		})
