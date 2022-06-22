@@ -17,3 +17,8 @@ type UpdateUserRequest struct {
 	Email     string `json:"email"`
 	Country   string `json:"country"`
 }
+
+type FindUserRequest struct {
+	Country string `json:"country"`
+	Email   string `json:"email"`
+}

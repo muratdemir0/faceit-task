@@ -9,6 +9,7 @@ import (
 	"github.com/muratdemir0/faceit-task/internal/user"
 	mocks "github.com/muratdemir0/faceit-task/mocks/user"
 	. "github.com/smartystreets/goconvey/convey"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -214,6 +215,41 @@ func TestHandler_DeleteUserHandler(t *testing.T) {
 
 }
 
+func TestHandler_FindHandler(t *testing.T) {
+	Convey("Given find users request is valid by filters", t, func() {
+		app := createTestApp()
+		c := gomock.NewController(t)
+		defer c.Finish()
+		params := &user.FindUserRequest{
+			Country: "UK",
+		}
+		expectedUsers := &user.Response{Users: []user.User{
+			{
+				ID:        "123",
+				FirstName: "John",
+				LastName:  "Doe",
+				Nickname:  "jdoe",
+				Password:  "123456",
+				Email:     "jdoe@test.com",
+				Country:   "UK",
+			},
+		}}
+		Convey("When find method is called with valid request", func() {
+			mockService := mocks.NewMockService(c)
+			mockService.EXPECT().FindBy(gomock.Any(), params).Return(expectedUsers, nil)
+			handler := user.NewHandler(mockService)
+			handler.RegisterRoutes(app)
+
+			req := NewHTTPRequestWithJSON(http.MethodGet, "/users?country=UK", params)
+			actualResponse, _ := app.Test(req)
+			defer actualResponse.Body.Close()
+			Convey("Then it should return users", func() {
+				SoBodyResemble(actualResponse.Body, expectedUsers)
+			})
+		})
+	})
+}
+
 func createTestApp() *fiber.App {
 	return fiber.New()
 }
@@ -223,4 +259,15 @@ func NewHTTPRequestWithJSON(method, url string, request interface{}) *http.Reque
 	req := httptest.NewRequest(method, url, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	return req
+}
+
+func SoBodyResemble(responseBody io.Reader, expected interface{}) {
+	var actualBody interface{}
+	_ = json.NewDecoder(responseBody).Decode(&actualBody)
+
+	expectedBodyJSON, _ := json.Marshal(expected)
+	var expectedBody interface{}
+	_ = json.Unmarshal(expectedBodyJSON, &expectedBody)
+
+	So(actualBody, ShouldResemble, expectedBody)
 }

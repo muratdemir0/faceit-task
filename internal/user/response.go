@@ -1,5 +1,9 @@
 package user
 
+type Response struct {
+	Users []User `json:"users"`
+}
+
 type User struct {
 	ID        string `json:"id"`
 	FirstName string `json:"first_name"`

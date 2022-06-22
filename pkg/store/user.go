@@ -19,13 +19,17 @@ type User struct {
 	Email     string `json:"email"`
 	Country   string `json:"country"`
 }
+type FindBy struct {
+	Country string `json:"country"`
+	Email   string `json:"email"`
+}
 
 func NewUserStore(client *mongo.Client, config *config.Mongo) UserStore {
 	return UserStore{client: client, config: config}
 }
 
-func (us UserStore) Create(ctx context.Context, cu *User) error {
-	_, err := us.client.Database(us.config.Name).Collection(us.config.Collections.Users).InsertOne(ctx, cu)
+func (s UserStore) Create(ctx context.Context, cu *User) error {
+	_, err := s.client.Database(s.config.Name).Collection(s.config.Collections.Users).InsertOne(ctx, cu)
 	if err != nil {
 		return err
 	}
