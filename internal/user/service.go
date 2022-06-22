@@ -6,8 +6,8 @@ import (
 )
 
 type Store interface {
-	Create(ctx context.Context, u *User) error
-	Update(ctx context.Context, u *User) error
+	Create(ctx context.Context, u *store.User) error
+	Update(ctx context.Context, u *store.User) error
 	Delete(ctx context.Context, userID string) error
 	Find(ctx context.Context, userID string) (store.User, error)
 	FindBy(ctx context.Context, criteria store.FindBy) ([]store.User, error)
@@ -21,7 +21,7 @@ func NewService(store Store) Service {
 }
 
 func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
-	user := &User{
+	user := &store.User{
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Nickname:  req.Nickname,
@@ -33,7 +33,7 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 }
 
 func (s service) Update(ctx context.Context, userID string, req *UpdateUserRequest) error {
-	user := &User{
+	user := &store.User{
 		ID:        userID,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
@@ -52,7 +52,6 @@ func (s service) Delete(ctx context.Context, userID string) error {
 func (s service) FindBy(ctx context.Context, criteria *FindUserRequest) (*Response, error) {
 	findBy := store.FindBy{
 		Country: criteria.Country,
-		Email:   criteria.Email,
 	}
 	users, err := s.store.FindBy(ctx, findBy)
 	if err != nil {

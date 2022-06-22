@@ -25,7 +25,7 @@ func TestService_Create(t *testing.T) {
 			Country:   "UK",
 		}
 		Convey("When repo's create is called", func() {
-			cu := &user.User{
+			cu := &store.User{
 				FirstName: cur.FirstName,
 				LastName:  cur.LastName,
 				Nickname:  cur.Nickname,
@@ -55,7 +55,7 @@ func TestService_Create(t *testing.T) {
 			Country:   "UK",
 		}
 		Convey("When repo's create is called", func() {
-			cu := &user.User{
+			cu := &store.User{
 				FirstName: cur.FirstName,
 				LastName:  cur.LastName,
 				Nickname:  cur.Nickname,
@@ -88,7 +88,7 @@ func TestService_Update(t *testing.T) {
 			Country:   "UK",
 		}
 		Convey("When repo's update method is called", func() {
-			cu := &user.User{
+			cu := &store.User{
 				ID:        userID,
 				FirstName: updateUserReq.FirstName,
 				LastName:  updateUserReq.LastName,
@@ -119,7 +119,7 @@ func TestService_Update(t *testing.T) {
 			Country:   "UK",
 		}
 		Convey("When repo's update method is called", func() {
-			cu := &user.User{
+			cu := &store.User{
 				ID:        userID,
 				FirstName: updateUserReq.FirstName,
 				LastName:  updateUserReq.LastName,

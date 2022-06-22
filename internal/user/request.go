@@ -20,5 +20,4 @@ type UpdateUserRequest struct {
 
 type FindUserRequest struct {
 	Country string `json:"country"`
-	Email   string `json:"email"`
 }
