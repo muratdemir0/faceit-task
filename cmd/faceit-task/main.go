@@ -39,7 +39,8 @@ func run() error {
 		}
 	}()
 
-	mongoURI := fmt.Sprintf("mongodb://%s:%d", conf.Mongo.Host, conf.Mongo.Port)
+	mongoURI := fmt.Sprintf("mongodb://%s:%s@%s:%d", conf.Mongo.User, conf.Mongo.Password,
+		conf.Mongo.Host, conf.Mongo.Port)
 	mongoClient, connectErr := mongo.Connect(context.Background(), options.Client().ApplyURI(mongoURI))
 	if connectErr != nil {
 		return connectErr
