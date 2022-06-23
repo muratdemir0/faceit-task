@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/muratdemir0/faceit-task/pkg/store"
 )
 
@@ -22,6 +23,7 @@ func NewService(store Store) Service {
 
 func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 	user := &store.User{
+		ID:        uuid.New().String(),
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Nickname:  req.Nickname,
