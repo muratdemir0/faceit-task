@@ -1,6 +1,7 @@
 run:
 	APP_ENV=dev go run ./cmd/faceit-task/main.go
-
+build:
+	go build ./cmd/faceit-task/main.go
 unit-test:
 	go test ./... -v
 
