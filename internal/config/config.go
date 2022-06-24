@@ -9,6 +9,7 @@ type Config struct {
 	Appname string
 	Server  Server
 	Mongo   Mongo
+	Kafka   Kafka
 }
 
 type Server struct {

@@ -13,13 +13,19 @@ type Store interface {
 	Get(ctx context.Context, userID string) (store.User, error)
 	List(ctx context.Context, criteria store.FindBy) ([]store.User, error)
 }
-type service struct {
-	store Store
-	uuid  uuid.UUID
+
+type Producer interface {
+	Produce(ctx context.Context, topic string, message interface{}) error
 }
 
-func NewService(store Store, u uuid.UUID) Service {
-	return &service{store: store, uuid: u}
+type service struct {
+	store    Store
+	producer Producer
+	uuid     uuid.UUID
+}
+
+func NewService(store Store, producer Producer, u uuid.UUID) Service {
+	return &service{store: store, producer: producer, uuid: u}
 }
 
 func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
@@ -32,7 +38,16 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 		Email:     req.Email,
 		Country:   req.Country,
 	}
-	return s.store.Create(ctx, user)
+	err := s.store.Create(ctx, user)
+	if err != nil {
+		return err
+	}
+	return s.producer.Produce(ctx, KafkaUserCreatedTopic, Event{
+		UserID:    user.ID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+	})
 }
 
 func (s service) Update(ctx context.Context, userID string, req *UpdateUserRequest) error {
@@ -45,11 +60,26 @@ func (s service) Update(ctx context.Context, userID string, req *UpdateUserReque
 		Email:     req.Email,
 		Country:   req.Country,
 	}
-	return s.store.Update(ctx, user)
+	err := s.store.Update(ctx, user)
+	if err != nil {
+		return err
+	}
+	return s.producer.Produce(ctx, KafkaUserUpdatedTopic, Event{
+		UserID:    user.ID,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+	})
 }
 
 func (s service) Delete(ctx context.Context, userID string) error {
-	return s.store.Delete(ctx, userID)
+	err := s.store.Delete(ctx, userID)
+	if err != nil {
+		return err
+	}
+	return s.producer.Produce(ctx, KafkaUserDeletedTopic, Event{
+		UserID: userID,
+	})
 }
 
 func (s service) List(ctx context.Context, criteria *FindUserRequest) (*Response, error) {

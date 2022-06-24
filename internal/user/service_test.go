@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/muratdemir0/faceit-task/internal/user"
+	producerMock "github.com/muratdemir0/faceit-task/mocks/event"
 	mocks "github.com/muratdemir0/faceit-task/mocks/user"
 	"github.com/muratdemir0/faceit-task/pkg/store"
 	. "github.com/smartystreets/goconvey/convey"
@@ -17,6 +18,7 @@ func TestService_Create(t *testing.T) {
 		c := gomock.NewController(t)
 		defer c.Finish()
 		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
 		cur := &user.CreateUserRequest{
 			FirstName: "John",
 			LastName:  "Doe",
@@ -37,11 +39,22 @@ func TestService_Create(t *testing.T) {
 				Country:   cur.Country,
 			}
 			mockUserStore.EXPECT().Create(gomock.Any(), cu).Return(nil)
-			service := user.NewService(mockUserStore, ID)
+			service := user.NewService(mockUserStore, mockProducer, ID)
 			err := service.Create(context.TODO(), cur)
 			Convey("Then user should be created", func() {
 				So(err, ShouldBeNil)
+				Convey("Then user created event should be produced", func() {
+					actualEvents := mockProducer.Events[user.KafkaUserCreatedTopic]
+					expectedCreatedEvent := []interface{}{user.Event{
+						UserID:    cu.ID,
+						FirstName: cu.FirstName,
+						LastName:  cu.LastName,
+						Email:     cu.Email,
+					}}
+					So(actualEvents, ShouldResemble, expectedCreatedEvent)
+				})
 			})
+
 		})
 	})
 
@@ -49,6 +62,7 @@ func TestService_Create(t *testing.T) {
 		c := gomock.NewController(t)
 		defer c.Finish()
 		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
 		cur := &user.CreateUserRequest{
 			FirstName: "John",
 			LastName:  "Doe",
@@ -69,7 +83,7 @@ func TestService_Create(t *testing.T) {
 				Country:   cur.Country,
 			}
 			mockUserStore.EXPECT().Create(gomock.Any(), cu).Return(errors.New("error"))
-			service := user.NewService(mockUserStore, ID)
+			service := user.NewService(mockUserStore, mockProducer, ID)
 			err := service.Create(context.TODO(), cur)
 			Convey("Then repo should be return an error", func() {
 				So(err, ShouldNotBeNil)
@@ -84,6 +98,7 @@ func TestService_Update(t *testing.T) {
 		c := gomock.NewController(t)
 		defer c.Finish()
 		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
 		updateUserReq := &user.UpdateUserRequest{
 			FirstName: "John",
 			LastName:  "Doe",
@@ -103,10 +118,20 @@ func TestService_Update(t *testing.T) {
 				Country:   updateUserReq.Country,
 			}
 			mockUserStore.EXPECT().Update(gomock.Any(), cu).Return(nil)
-			service := user.NewService(mockUserStore, uuid.New())
+			service := user.NewService(mockUserStore, mockProducer, uuid.New())
 			err := service.Update(context.TODO(), userID, updateUserReq)
 			Convey("Then user should be updated", func() {
 				So(err, ShouldBeNil)
+				Convey("Then user updated event should be produced", func() {
+					actualEvents := mockProducer.Events[user.KafkaUserUpdatedTopic]
+					expectedCreatedEvent := []interface{}{user.Event{
+						UserID:    cu.ID,
+						FirstName: cu.FirstName,
+						LastName:  cu.LastName,
+						Email:     cu.Email,
+					}}
+					So(actualEvents, ShouldResemble, expectedCreatedEvent)
+				})
 			})
 		})
 	})
@@ -115,6 +140,7 @@ func TestService_Update(t *testing.T) {
 		c := gomock.NewController(t)
 		defer c.Finish()
 		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
 		updateUserReq := &user.UpdateUserRequest{
 			FirstName: "John",
 			LastName:  "Doe",
@@ -134,7 +160,7 @@ func TestService_Update(t *testing.T) {
 				Country:   updateUserReq.Country,
 			}
 			mockUserStore.EXPECT().Update(gomock.Any(), cu).Return(errors.New("error"))
-			service := user.NewService(mockUserStore, uuid.New())
+			service := user.NewService(mockUserStore, mockProducer, uuid.New())
 			err := service.Update(context.TODO(), userID, updateUserReq)
 			Convey("Then repo should return an error", func() {
 				So(err, ShouldNotBeNil)
@@ -149,12 +175,20 @@ func TestService_Delete(t *testing.T) {
 		c := gomock.NewController(t)
 		defer c.Finish()
 		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
 		Convey("When repo's delete method is called", func() {
 			mockUserStore.EXPECT().Delete(gomock.Any(), userID).Return(nil)
-			service := user.NewService(mockUserStore, uuid.New())
+			service := user.NewService(mockUserStore, mockProducer, uuid.New())
 			err := service.Delete(context.TODO(), userID)
 			Convey("Then repo should be deleted", func() {
 				So(err, ShouldBeNil)
+				Convey("Then user updated event should be produced", func() {
+					actualEvents := mockProducer.Events[user.KafkaUserDeletedTopic]
+					expectedCreatedEvent := []interface{}{user.Event{
+						UserID: userID,
+					}}
+					So(actualEvents, ShouldResemble, expectedCreatedEvent)
+				})
 			})
 		})
 	})
@@ -163,9 +197,10 @@ func TestService_Delete(t *testing.T) {
 		c := gomock.NewController(t)
 		defer c.Finish()
 		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
 		Convey("When repo's delete method is called", func() {
 			mockUserStore.EXPECT().Delete(gomock.Any(), userID).Return(errors.New("error"))
-			service := user.NewService(mockUserStore, uuid.New())
+			service := user.NewService(mockUserStore, mockProducer, uuid.New())
 			err := service.Delete(context.TODO(), userID)
 			Convey("Then repo should return an error", func() {
 				So(err, ShouldNotBeNil)
@@ -179,6 +214,7 @@ func TestService_List(t *testing.T) {
 		c := gomock.NewController(t)
 		defer c.Finish()
 		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
 		req := user.FindUserRequest{
 			Country: "UK",
 		}
@@ -211,7 +247,7 @@ func TestService_List(t *testing.T) {
 		}
 		Convey("When repo's findBy method is called", func() {
 			mockUserStore.EXPECT().List(gomock.Any(), findUserStore).Return(users, nil)
-			service := user.NewService(mockUserStore, uuid.New())
+			service := user.NewService(mockUserStore, mockProducer, uuid.New())
 			acutalResponse, _ := service.List(context.TODO(), &req)
 			Convey("Then repo should return users", func() {
 				So(acutalResponse, ShouldResemble, &expectedResponse)
@@ -223,6 +259,7 @@ func TestService_List(t *testing.T) {
 		c := gomock.NewController(t)
 		defer c.Finish()
 		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
 		req := user.FindUserRequest{
 			Country: "UK",
 		}
@@ -231,7 +268,7 @@ func TestService_List(t *testing.T) {
 		}
 		Convey("When repo's findBy method is called", func() {
 			mockUserStore.EXPECT().List(gomock.Any(), findUserStore).Return(nil, errors.New("error"))
-			service := user.NewService(mockUserStore, uuid.New())
+			service := user.NewService(mockUserStore, mockProducer, uuid.New())
 			_, err := service.List(context.TODO(), &req)
 			Convey("Then repo should return users", func() {
 				So(err, ShouldNotBeNil)

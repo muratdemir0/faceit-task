@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/muratdemir0/faceit-task/internal/config"
 	"github.com/muratdemir0/faceit-task/internal/user"
+	"github.com/muratdemir0/faceit-task/pkg/event"
 	"github.com/muratdemir0/faceit-task/pkg/server"
 	"github.com/muratdemir0/faceit-task/pkg/store"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -58,8 +59,13 @@ func run() error {
 		return err
 	}
 
+	producer, producerErr := event.NewProducer(conf.Kafka.URL)
+	if producerErr != nil {
+		return err
+	}
+
 	userStore := store.NewUserStore(mongoClient, &conf.Mongo)
-	userService := user.NewService(userStore, u)
+	userService := user.NewService(userStore, producer, u)
 	userHandler := user.NewHandler(userService)
 
 	handlers := []server.Handler{userHandler}

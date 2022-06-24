@@ -3,7 +3,7 @@ run:
 build:
 	go build ./cmd/faceit-task/main.go
 unit-test:
-	go test ./... -v
+	go test ./... -short
 
 generate-mocks:
 	mockgen -destination=mocks/user/service.go -package mocks github.com/muratdemir0/faceit-task/internal/user Service
