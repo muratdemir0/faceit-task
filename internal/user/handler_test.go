@@ -215,7 +215,7 @@ func TestHandler_DeleteUserHandler(t *testing.T) {
 
 }
 
-func TestHandler_FindHandler(t *testing.T) {
+func TestHandler_ListHandler(t *testing.T) {
 	Convey("Given find users request is valid by filters", t, func() {
 		app := createTestApp()
 		c := gomock.NewController(t)
@@ -244,7 +244,7 @@ func TestHandler_FindHandler(t *testing.T) {
 			actualResponse, _ := app.Test(req)
 			defer actualResponse.Body.Close()
 			Convey("Then it should return users", func() {
-				SoBodyResemble(actualResponse.Body, expectedUsers)
+				SoBodyResemble(actualResponse.Body, user.DefaultResponse{Data: expectedUsers})
 			})
 		})
 	})

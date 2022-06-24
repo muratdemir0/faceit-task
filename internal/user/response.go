@@ -1,5 +1,9 @@
 package user
 
+type DefaultResponse struct {
+	Data interface{} `json:"data"`
+}
+
 type Response struct {
 	Users []User `json:"users"`
 }

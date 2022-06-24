@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/muratdemir0/faceit-task/internal/config"
 	"github.com/muratdemir0/faceit-task/internal/user"
 	"github.com/muratdemir0/faceit-task/pkg/server"
@@ -45,13 +46,20 @@ func run() error {
 	if connectErr != nil {
 		return connectErr
 	}
+
 	if err := mongoClient.Ping(context.TODO(), readpref.Primary()); err != nil {
 		return err
 	}
+
 	fmt.Println("Successfully connected and pinged.")
 
+	u, err := uuid.NewUUID()
+	if err != nil {
+		return err
+	}
+
 	userStore := store.NewUserStore(mongoClient, &conf.Mongo)
-	userService := user.NewService(userStore)
+	userService := user.NewService(userStore, u)
 	userHandler := user.NewHandler(userService)
 
 	handlers := []server.Handler{userHandler}

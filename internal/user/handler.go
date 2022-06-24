@@ -37,8 +37,7 @@ func (h Handler) Create(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(err)
 	}
-	ctx.Status(http.StatusCreated)
-	return nil
+	return ctx.Status(http.StatusCreated).JSON(DefaultResponse{})
 }
 
 func (h Handler) Update(ctx *fiber.Ctx) error {
@@ -51,8 +50,7 @@ func (h Handler) Update(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(err)
 	}
-	ctx.Status(http.StatusOK)
-	return nil
+	return ctx.Status(http.StatusOK).JSON(DefaultResponse{})
 }
 
 func (h Handler) Delete(ctx *fiber.Ctx) error {
@@ -61,8 +59,7 @@ func (h Handler) Delete(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(err)
 	}
-	ctx.Status(http.StatusOK)
-	return nil
+	return ctx.Status(http.StatusOK).JSON(DefaultResponse{})
 }
 
 func (h Handler) List(ctx *fiber.Ctx) error {
@@ -74,5 +71,5 @@ func (h Handler) List(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(err)
 	}
-	return ctx.Status(http.StatusOK).JSON(users)
+	return ctx.Status(http.StatusOK).JSON(DefaultResponse{Data: users})
 }
