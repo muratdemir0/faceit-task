@@ -236,7 +236,7 @@ func TestHandler_FindHandler(t *testing.T) {
 		}}
 		Convey("When find method is called with valid request", func() {
 			mockService := mocks.NewMockService(c)
-			mockService.EXPECT().FindBy(gomock.Any(), params).Return(expectedUsers, nil)
+			mockService.EXPECT().List(gomock.Any(), params).Return(expectedUsers, nil)
 			handler := user.NewHandler(mockService)
 			handler.RegisterRoutes(app)
 

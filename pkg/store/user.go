@@ -61,7 +61,7 @@ func (s UserStore) Delete(ctx context.Context, userID string) error {
 	}
 	return nil
 }
-func (s UserStore) Find(ctx context.Context, userID string) (User, error) {
+func (s UserStore) Get(ctx context.Context, userID string) (User, error) {
 	user := User{}
 	err := s.client.
 		Database(s.config.Name).
@@ -73,7 +73,7 @@ func (s UserStore) Find(ctx context.Context, userID string) (User, error) {
 	}
 	return user, nil
 }
-func (s UserStore) FindBy(ctx context.Context, criteria FindBy) ([]User, error) {
+func (s UserStore) List(ctx context.Context, criteria FindBy) ([]User, error) {
 	var users []User
 	cursor, err := s.client.
 		Database(s.config.Name).

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	"github.com/muratdemir0/faceit-task/internal/user"
 	mocks "github.com/muratdemir0/faceit-task/mocks/user"
 	"github.com/muratdemir0/faceit-task/pkg/store"
@@ -24,8 +25,10 @@ func TestService_Create(t *testing.T) {
 			Email:     "john@doe.com",
 			Country:   "UK",
 		}
+		ID := uuid.New()
 		Convey("When repo's create is called", func() {
 			cu := &store.User{
+				ID:        ID.String(),
 				FirstName: cur.FirstName,
 				LastName:  cur.LastName,
 				Nickname:  cur.Nickname,
@@ -34,7 +37,7 @@ func TestService_Create(t *testing.T) {
 				Country:   cur.Country,
 			}
 			mockUserStore.EXPECT().Create(gomock.Any(), cu).Return(nil)
-			service := user.NewService(mockUserStore)
+			service := user.NewService(mockUserStore, ID)
 			err := service.Create(context.TODO(), cur)
 			Convey("Then user should be created", func() {
 				So(err, ShouldBeNil)
@@ -54,8 +57,10 @@ func TestService_Create(t *testing.T) {
 			Email:     "john@doe.com",
 			Country:   "UK",
 		}
+		ID := uuid.New()
 		Convey("When repo's create is called", func() {
 			cu := &store.User{
+				ID:        ID.String(),
 				FirstName: cur.FirstName,
 				LastName:  cur.LastName,
 				Nickname:  cur.Nickname,
@@ -64,7 +69,7 @@ func TestService_Create(t *testing.T) {
 				Country:   cur.Country,
 			}
 			mockUserStore.EXPECT().Create(gomock.Any(), cu).Return(errors.New("error"))
-			service := user.NewService(mockUserStore)
+			service := user.NewService(mockUserStore, ID)
 			err := service.Create(context.TODO(), cur)
 			Convey("Then repo should be return an error", func() {
 				So(err, ShouldNotBeNil)
@@ -98,7 +103,7 @@ func TestService_Update(t *testing.T) {
 				Country:   updateUserReq.Country,
 			}
 			mockUserStore.EXPECT().Update(gomock.Any(), cu).Return(nil)
-			service := user.NewService(mockUserStore)
+			service := user.NewService(mockUserStore, uuid.New())
 			err := service.Update(context.TODO(), userID, updateUserReq)
 			Convey("Then user should be updated", func() {
 				So(err, ShouldBeNil)
@@ -129,7 +134,7 @@ func TestService_Update(t *testing.T) {
 				Country:   updateUserReq.Country,
 			}
 			mockUserStore.EXPECT().Update(gomock.Any(), cu).Return(errors.New("error"))
-			service := user.NewService(mockUserStore)
+			service := user.NewService(mockUserStore, uuid.New())
 			err := service.Update(context.TODO(), userID, updateUserReq)
 			Convey("Then repo should return an error", func() {
 				So(err, ShouldNotBeNil)
@@ -146,7 +151,7 @@ func TestService_Delete(t *testing.T) {
 		mockUserStore := mocks.NewMockStore(c)
 		Convey("When repo's delete method is called", func() {
 			mockUserStore.EXPECT().Delete(gomock.Any(), userID).Return(nil)
-			service := user.NewService(mockUserStore)
+			service := user.NewService(mockUserStore, uuid.New())
 			err := service.Delete(context.TODO(), userID)
 			Convey("Then repo should be deleted", func() {
 				So(err, ShouldBeNil)
@@ -160,7 +165,7 @@ func TestService_Delete(t *testing.T) {
 		mockUserStore := mocks.NewMockStore(c)
 		Convey("When repo's delete method is called", func() {
 			mockUserStore.EXPECT().Delete(gomock.Any(), userID).Return(errors.New("error"))
-			service := user.NewService(mockUserStore)
+			service := user.NewService(mockUserStore, uuid.New())
 			err := service.Delete(context.TODO(), userID)
 			Convey("Then repo should return an error", func() {
 				So(err, ShouldNotBeNil)
@@ -169,7 +174,7 @@ func TestService_Delete(t *testing.T) {
 	})
 }
 
-func TestService_FindBy(t *testing.T) {
+func TestService_List(t *testing.T) {
 	Convey("Given country code request is valid", t, func() {
 		c := gomock.NewController(t)
 		defer c.Finish()
@@ -205,9 +210,9 @@ func TestService_FindBy(t *testing.T) {
 			},
 		}
 		Convey("When repo's findBy method is called", func() {
-			mockUserStore.EXPECT().FindBy(gomock.Any(), findUserStore).Return(users, nil)
-			service := user.NewService(mockUserStore)
-			acutalResponse, _ := service.FindBy(context.TODO(), &req)
+			mockUserStore.EXPECT().List(gomock.Any(), findUserStore).Return(users, nil)
+			service := user.NewService(mockUserStore, uuid.New())
+			acutalResponse, _ := service.List(context.TODO(), &req)
 			Convey("Then repo should return users", func() {
 				So(acutalResponse, ShouldResemble, &expectedResponse)
 			})
@@ -225,9 +230,9 @@ func TestService_FindBy(t *testing.T) {
 			Country: req.Country,
 		}
 		Convey("When repo's findBy method is called", func() {
-			mockUserStore.EXPECT().FindBy(gomock.Any(), findUserStore).Return(nil, errors.New("error"))
-			service := user.NewService(mockUserStore)
-			_, err := service.FindBy(context.TODO(), &req)
+			mockUserStore.EXPECT().List(gomock.Any(), findUserStore).Return(nil, errors.New("error"))
+			service := user.NewService(mockUserStore, uuid.New())
+			_, err := service.List(context.TODO(), &req)
 			Convey("Then repo should return users", func() {
 				So(err, ShouldNotBeNil)
 			})

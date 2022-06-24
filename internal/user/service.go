@@ -10,20 +10,21 @@ type Store interface {
 	Create(ctx context.Context, u *store.User) error
 	Update(ctx context.Context, u *store.User) error
 	Delete(ctx context.Context, userID string) error
-	Find(ctx context.Context, userID string) (store.User, error)
-	FindBy(ctx context.Context, criteria store.FindBy) ([]store.User, error)
+	Get(ctx context.Context, userID string) (store.User, error)
+	List(ctx context.Context, criteria store.FindBy) ([]store.User, error)
 }
 type service struct {
 	store Store
+	uuid  uuid.UUID
 }
 
-func NewService(store Store) Service {
-	return &service{store: store}
+func NewService(store Store, u uuid.UUID) Service {
+	return &service{store: store, uuid: u}
 }
 
 func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 	user := &store.User{
-		ID:        uuid.New().String(),
+		ID:        s.uuid.String(),
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Nickname:  req.Nickname,
@@ -51,11 +52,11 @@ func (s service) Delete(ctx context.Context, userID string) error {
 	return s.store.Delete(ctx, userID)
 }
 
-func (s service) FindBy(ctx context.Context, criteria *FindUserRequest) (*Response, error) {
+func (s service) List(ctx context.Context, criteria *FindUserRequest) (*Response, error) {
 	findBy := store.FindBy{
 		Country: criteria.Country,
 	}
-	users, err := s.store.FindBy(ctx, findBy)
+	users, err := s.store.List(ctx, findBy)
 	if err != nil {
 		return nil, err
 	}
