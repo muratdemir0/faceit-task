@@ -39,7 +39,7 @@ func makeResponse(err error) ErrorResponse {
 
 func InternalServerError(msg string) ErrorResponse {
 	if msg == "" {
-		msg = "We encountered an error while processing your request."
+		msg = "Well, this is unexpected."
 	}
 	return ErrorResponse{
 		Status:  http.StatusInternalServerError,
@@ -49,7 +49,7 @@ func InternalServerError(msg string) ErrorResponse {
 
 func MethodNotAllowedError(msg string) ErrorResponse {
 	if msg == "" {
-		msg = "Method Not Allowed."
+		msg = "Method not allowed."
 	}
 	return ErrorResponse{
 		Status:  http.StatusMethodNotAllowed,
@@ -59,7 +59,7 @@ func MethodNotAllowedError(msg string) ErrorResponse {
 
 func NotFound(msg string) ErrorResponse {
 	if msg == "" {
-		msg = "The requested resource was not found."
+		msg = "Request was not found."
 	}
 	return ErrorResponse{
 		Status:  http.StatusNotFound,
@@ -68,7 +68,7 @@ func NotFound(msg string) ErrorResponse {
 }
 func BadRequest(msg string) ErrorResponse {
 	if msg == "" {
-		msg = "Your request is in a bad format."
+		msg = "Request was not valid."
 	}
 	return ErrorResponse{
 		Status:  http.StatusBadRequest,
