@@ -57,25 +57,31 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 }
 
 func (s service) Update(ctx context.Context, userID string, req *UpdateUserRequest) error {
-	user := &store.User{
-		ID:        userID,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Nickname:  req.Nickname,
-		Password:  req.Password, // TODO: check password
-		Email:     req.Email,
-		Country:   req.Country,
+	u, getErr := s.store.Get(ctx, userID)
+
+	if getErr != nil {
+		return errors.Wrap(getErr, "failed to get user")
 	}
-	err := s.store.Update(ctx, user)
+
+	u.FirstName = req.FirstName
+	u.LastName = req.LastName
+	u.Nickname = req.Nickname
+	u.Email = req.Email
+	u.Country = req.Country
+	if req.Password != "" {
+		u.Password = req.Password
+	}
+
+	err := s.store.Update(ctx, &u)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to update user")
 	}
 
 	kafkaErr := s.producer.Produce(ctx, KafkaUserUpdatedTopic, Event{
-		UserID:    user.ID,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
+		UserID:    u.ID,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Email:     u.Email,
 	})
 
 	if kafkaErr != nil {

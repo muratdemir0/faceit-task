@@ -2,14 +2,15 @@ package user_test
 
 import (
 	"context"
-	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/muratdemir0/faceit-task/internal/user"
 	mocks2 "github.com/muratdemir0/faceit-task/mocks"
 	producerMock "github.com/muratdemir0/faceit-task/mocks/event"
 	mocks "github.com/muratdemir0/faceit-task/mocks/user"
 	"github.com/muratdemir0/faceit-task/pkg/store"
+	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -116,7 +117,7 @@ func TestService_Update(t *testing.T) {
 			Country:   "UK",
 		}
 		Convey("When repo's update method is called", func() {
-			cu := &store.User{
+			expectedUser := store.User{
 				ID:        userID,
 				FirstName: updateUserReq.FirstName,
 				LastName:  updateUserReq.LastName,
@@ -125,7 +126,8 @@ func TestService_Update(t *testing.T) {
 				Email:     updateUserReq.Email,
 				Country:   updateUserReq.Country,
 			}
-			mockUserStore.EXPECT().Update(gomock.Any(), cu).Return(nil)
+			mockUserStore.EXPECT().Get(gomock.Any(), userID).Return(expectedUser, nil)
+			mockUserStore.EXPECT().Update(gomock.Any(), &expectedUser).Return(nil)
 			service := user.NewService(mockUserStore, mockProducer, mockUUID)
 			err := service.Update(context.TODO(), userID, updateUserReq)
 			Convey("Then user should be updated", func() {
@@ -133,10 +135,10 @@ func TestService_Update(t *testing.T) {
 				Convey("Then user updated event should be produced", func() {
 					actualEvents := mockProducer.Events[user.KafkaUserUpdatedTopic]
 					expectedCreatedEvent := []interface{}{user.Event{
-						UserID:    cu.ID,
-						FirstName: cu.FirstName,
-						LastName:  cu.LastName,
-						Email:     cu.Email,
+						UserID:    expectedUser.ID,
+						FirstName: expectedUser.FirstName,
+						LastName:  expectedUser.LastName,
+						Email:     expectedUser.Email,
 					}}
 					So(actualEvents, ShouldResemble, expectedCreatedEvent)
 				})
@@ -144,7 +146,7 @@ func TestService_Update(t *testing.T) {
 		})
 	})
 
-	Convey("Given update user request is valid", t, func() {
+	Convey("Given update user request is valid and user id is not exist", t, func() {
 		c := gomock.NewController(t)
 		defer c.Finish()
 		mockUserStore := mocks.NewMockStore(c)
@@ -159,8 +161,32 @@ func TestService_Update(t *testing.T) {
 			Country:   "UK",
 		}
 		Convey("When repo's update method is called", func() {
-			cu := &store.User{
-				ID:        userID,
+			mockUserStore.EXPECT().Get(gomock.Any(), userID).Return(store.User{}, errors.Wrap(store.NotFoundError, "failed to get user"))
+			service := user.NewService(mockUserStore, mockProducer, mockUUID)
+			err := service.Update(context.TODO(), userID, updateUserReq)
+			expectedError := errors.Wrap(errors.Wrap(store.NotFoundError, "failed to get user"), "failed to get user")
+			Convey("Then repo should return an error which is not found", func() {
+				assert.EqualError(t, err, expectedError.Error())
+			})
+		})
+	})
+
+	Convey("Given update user request is valid and user id is exist", t, func() {
+		c := gomock.NewController(t)
+		defer c.Finish()
+		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
+		mockUUID := mocks2.NewMockGenerateIDFunc()
+		updateUserReq := &user.UpdateUserRequest{
+			FirstName: "John",
+			LastName:  "Doe",
+			Nickname:  "jdoe",
+			Password:  "123456",
+			Email:     "john@doe.com",
+			Country:   "UK",
+		}
+		Convey("When repo's update method is called", func() {
+			expectedUser := store.User{
 				FirstName: updateUserReq.FirstName,
 				LastName:  updateUserReq.LastName,
 				Nickname:  updateUserReq.Nickname,
@@ -168,11 +194,45 @@ func TestService_Update(t *testing.T) {
 				Email:     updateUserReq.Email,
 				Country:   updateUserReq.Country,
 			}
-			mockUserStore.EXPECT().Update(gomock.Any(), cu).Return(errors.New("error"))
+			mockUserStore.EXPECT().Get(gomock.Any(), userID).Return(expectedUser, nil)
+			mockUserStore.EXPECT().Update(gomock.Any(), &expectedUser).Return(errors.New("error"))
 			service := user.NewService(mockUserStore, mockProducer, mockUUID)
 			err := service.Update(context.TODO(), userID, updateUserReq)
-			Convey("Then repo should return an error", func() {
+			Convey("Then repo should return an error which is not found", func() {
 				So(err, ShouldNotBeNil)
+			})
+		})
+	})
+
+	Convey("Given update user request and user id is exist", t, func() {
+		c := gomock.NewController(t)
+		defer c.Finish()
+		mockUserStore := mocks.NewMockStore(c)
+		mockProducer := producerMock.NewEventProducerMock()
+		mockUUID := mocks2.NewMockGenerateIDFunc()
+		updateUserReq := &user.UpdateUserRequest{
+			FirstName: "John",
+			LastName:  "Doe",
+			Nickname:  "jdoe",
+			Password:  "123456",
+			Email:     "john@doe.com",
+			Country:   "UK",
+		}
+		Convey("When repo's update method is called", func() {
+			expectedUser := store.User{
+				FirstName: updateUserReq.FirstName,
+				LastName:  updateUserReq.LastName,
+				Nickname:  updateUserReq.Nickname,
+				Password:  updateUserReq.Password,
+				Email:     updateUserReq.Email,
+				Country:   updateUserReq.Country,
+			}
+			mockUserStore.EXPECT().Get(gomock.Any(), userID).Return(expectedUser, nil)
+			mockUserStore.EXPECT().Update(gomock.Any(), &expectedUser).Return(nil)
+			service := user.NewService(mockUserStore, mockProducer, mockUUID)
+			err := service.Update(context.TODO(), userID, updateUserReq)
+			Convey("Then repo should not return an error", func() {
+				So(err, ShouldBeNil)
 			})
 		})
 	})

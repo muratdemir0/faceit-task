@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var NotFoundError = mongo.ErrNoDocuments
+
 type UserStore struct {
 	client *mongo.Client
 	config *config.Mongo
@@ -73,7 +75,7 @@ func (s UserStore) Get(ctx context.Context, userID string) (User, error) {
 		FindOne(ctx, bson.D{{"_id", userID}}).
 		Decode(user)
 	if err != nil {
-		return User{}, errors.Wrap(err, "failed to get user")
+		return User{}, errors.Wrap(NotFoundError, "failed to get user")
 	}
 	return user, nil
 }
