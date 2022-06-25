@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/muratdemir0/faceit-task/pkg/store"
 )
 
@@ -18,19 +17,21 @@ type Producer interface {
 	Produce(ctx context.Context, topic string, message interface{}) error
 }
 
+type GenerateUUID func() string
+
 type service struct {
-	store    Store
-	producer Producer
-	uuid     uuid.UUID
+	store      Store
+	producer   Producer
+	generateID GenerateUUID
 }
 
-func NewService(store Store, producer Producer, u uuid.UUID) Service {
-	return &service{store: store, producer: producer, uuid: u}
+func NewService(store Store, producer Producer, uuidGenerator GenerateUUID) Service {
+	return &service{store: store, producer: producer, generateID: uuidGenerator}
 }
 
 func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 	user := &store.User{
-		ID:        s.uuid.String(),
+		ID:        s.generateID(),
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Nickname:  req.Nickname,
