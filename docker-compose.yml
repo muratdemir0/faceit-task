@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile
     container_name: faceit-task-dev
     restart: on-failure
+    depends_on:
+      - zookeeper
     networks:
       - default
     environment:
@@ -29,6 +31,40 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: password
     ports:
       - "27017:27017"
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    volumes:
+      - "zookeeper_data:/bitnami"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      default:
+        aliases:
+          - zookeeper
+  kafka:
+    image: wurstmeister/kafka:2.12-2.4.0
+    ports:
+      - "9092:9092"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "user-created:1:1, user-deleted:1:1, user-updated:1:1"
+    depends_on:
+      - zookeeper
+    networks:
+      default:
+        aliases:
+          - kafka
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
 networks:
   default:
     driver: bridge
