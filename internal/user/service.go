@@ -10,7 +10,7 @@ type Store interface {
 	Update(ctx context.Context, u *store.User) error
 	Delete(ctx context.Context, userID string) error
 	Get(ctx context.Context, userID string) (store.User, error)
-	List(ctx context.Context, criteria store.FindBy) ([]store.User, error)
+	List(ctx context.Context, criteria store.ListCriteria) ([]store.User, error)
 }
 
 type Producer interface {
@@ -83,11 +83,11 @@ func (s service) Delete(ctx context.Context, userID string) error {
 	})
 }
 
-func (s service) List(ctx context.Context, criteria *FindUserRequest) (*Response, error) {
-	findBy := store.FindBy{
+func (s service) List(ctx context.Context, criteria *ListUserRequest) (*Response, error) {
+	c := store.ListCriteria{
 		Country: criteria.Country,
 	}
-	users, err := s.store.List(ctx, findBy)
+	users, err := s.store.List(ctx, c)
 	if err != nil {
 		return nil, err
 	}

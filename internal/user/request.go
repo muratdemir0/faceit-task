@@ -18,6 +18,6 @@ type UpdateUserRequest struct {
 	Country   string `json:"country"`
 }
 
-type FindUserRequest struct {
+type ListUserRequest struct {
 	Country string `json:"country"`
 }

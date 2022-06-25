@@ -13,7 +13,7 @@ type Handler struct {
 type Service interface {
 	Create(ctx context.Context, req *CreateUserRequest) error
 	Update(ctx context.Context, userID string, req *UpdateUserRequest) error
-	List(ctx context.Context, criteria *FindUserRequest) (*Response, error)
+	List(ctx context.Context, criteria *ListUserRequest) (*Response, error)
 	Delete(ctx context.Context, userID string) error
 }
 
@@ -63,7 +63,7 @@ func (h Handler) Delete(ctx *fiber.Ctx) error {
 }
 
 func (h Handler) List(ctx *fiber.Ctx) error {
-	params := &FindUserRequest{}
+	params := &ListUserRequest{}
 	if err := ctx.QueryParser(params); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(err)
 	}

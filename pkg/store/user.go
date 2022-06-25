@@ -20,7 +20,7 @@ type User struct {
 	Email     string `json:"email" bson:"email"`
 	Country   string `json:"country" bson:"country"`
 }
-type FindBy struct {
+type ListCriteria struct {
 	Country string `json:"country" bson:"country"`
 }
 
@@ -73,12 +73,16 @@ func (s UserStore) Get(ctx context.Context, userID string) (User, error) {
 	}
 	return user, nil
 }
-func (s UserStore) List(ctx context.Context, criteria FindBy) ([]User, error) {
+func (s UserStore) List(ctx context.Context, criteria ListCriteria) ([]User, error) {
 	var users []User
+	var filter bson.D
+	if criteria.Country != "" {
+		filter = bson.D{{"country", bson.D{{"$eq", criteria.Country}}}}
+	}
 	cursor, err := s.client.
 		Database(s.config.Name).
 		Collection(s.config.Collections.Users).
-		Find(ctx, bson.D{{"country", bson.D{{"$eq", criteria.Country}}}})
+		Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
