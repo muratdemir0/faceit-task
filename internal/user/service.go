@@ -86,6 +86,8 @@ func (s service) Delete(ctx context.Context, userID string) error {
 func (s service) List(ctx context.Context, criteria *ListUserRequest) (*Response, error) {
 	c := store.ListCriteria{
 		Country: criteria.Country,
+		Page:    criteria.Page,
+		Limit:   criteria.Limit,
 	}
 	users, err := s.store.List(ctx, c)
 	if err != nil {

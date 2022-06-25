@@ -220,7 +220,7 @@ func TestHandler_ListHandler(t *testing.T) {
 		app := createTestApp()
 		c := gomock.NewController(t)
 		defer c.Finish()
-		params := &user.FindUserRequest{
+		params := &user.ListUserRequest{
 			Country: "UK",
 		}
 		expectedUsers := &user.Response{Users: []user.User{

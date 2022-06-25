@@ -20,4 +20,6 @@ type UpdateUserRequest struct {
 
 type ListUserRequest struct {
 	Country string `json:"country"`
+	Page    int64  `json:"page"`
+	Limit   int64  `json:"limit"`
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/muratdemir0/faceit-task/internal/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserStore struct {
@@ -22,6 +23,8 @@ type User struct {
 }
 type ListCriteria struct {
 	Country string `json:"country" bson:"country"`
+	Page    int64  `json:"page" bson:"page"`
+	Limit   int64  `json:"limit" bson:"limit"`
 }
 
 func NewUserStore(client *mongo.Client, config *config.Mongo) UserStore {
@@ -76,13 +79,22 @@ func (s UserStore) Get(ctx context.Context, userID string) (User, error) {
 func (s UserStore) List(ctx context.Context, criteria ListCriteria) ([]User, error) {
 	var users []User
 	var filter bson.D
+	var o *options.FindOptions
 	if criteria.Country != "" {
 		filter = bson.D{{"country", bson.D{{"$eq", criteria.Country}}}}
+	} else {
+		filter = bson.D{}
+	}
+	if criteria.Page > 0 && criteria.Limit > 0 {
+		skip := criteria.Page*criteria.Limit - criteria.Limit
+		o = &options.FindOptions{Limit: &criteria.Limit, Skip: &skip}
+	} else {
+		o = &options.FindOptions{}
 	}
 	cursor, err := s.client.
 		Database(s.config.Name).
 		Collection(s.config.Collections.Users).
-		Find(ctx, filter)
+		Find(ctx, filter, o)
 	if err != nil {
 		return nil, err
 	}

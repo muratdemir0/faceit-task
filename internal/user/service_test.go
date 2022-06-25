@@ -227,10 +227,10 @@ func TestService_List(t *testing.T) {
 		mockUserStore := mocks.NewMockStore(c)
 		mockProducer := producerMock.NewEventProducerMock()
 		mockUUID := mocks2.NewMockGenerateIDFunc()
-		req := user.FindUserRequest{
+		req := user.ListUserRequest{
 			Country: "UK",
 		}
-		findUserStore := store.FindBy{
+		findUserStore := store.ListCriteria{
 			Country: req.Country,
 		}
 		users := []store.User{
@@ -273,10 +273,10 @@ func TestService_List(t *testing.T) {
 		mockUserStore := mocks.NewMockStore(c)
 		mockProducer := producerMock.NewEventProducerMock()
 		mockUUID := mocks2.NewMockGenerateIDFunc()
-		req := user.FindUserRequest{
+		req := user.ListUserRequest{
 			Country: "UK",
 		}
-		findUserStore := store.FindBy{
+		findUserStore := store.ListCriteria{
 			Country: req.Country,
 		}
 		Convey("When repo's findBy method is called", func() {
