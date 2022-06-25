@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"github.com/muratdemir0/faceit-task/pkg/store"
+	"github.com/pkg/errors"
 )
 
 type Store interface {
@@ -43,12 +44,16 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 	if err != nil {
 		return err
 	}
-	return s.producer.Produce(ctx, KafkaUserCreatedTopic, Event{
+	kafkaErr := s.producer.Produce(ctx, KafkaUserCreatedTopic, Event{
 		UserID:    user.ID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
 	})
+	if kafkaErr != nil {
+		return errors.Wrap(kafkaErr, "failed to produce user created event")
+	}
+	return nil
 }
 
 func (s service) Update(ctx context.Context, userID string, req *UpdateUserRequest) error {
@@ -65,12 +70,18 @@ func (s service) Update(ctx context.Context, userID string, req *UpdateUserReque
 	if err != nil {
 		return err
 	}
-	return s.producer.Produce(ctx, KafkaUserUpdatedTopic, Event{
+
+	kafkaErr := s.producer.Produce(ctx, KafkaUserUpdatedTopic, Event{
 		UserID:    user.ID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
 	})
+
+	if kafkaErr != nil {
+		return errors.Wrap(kafkaErr, "failed to produce user updated event")
+	}
+	return nil
 }
 
 func (s service) Delete(ctx context.Context, userID string) error {
@@ -78,9 +89,13 @@ func (s service) Delete(ctx context.Context, userID string) error {
 	if err != nil {
 		return err
 	}
-	return s.producer.Produce(ctx, KafkaUserDeletedTopic, Event{
+	kafkaErr := s.producer.Produce(ctx, KafkaUserDeletedTopic, Event{
 		UserID: userID,
 	})
+	if kafkaErr != nil {
+		return errors.Wrap(kafkaErr, "failed to produce user deleted event")
+	}
+	return nil
 }
 
 func (s service) List(ctx context.Context, criteria *ListUserRequest) (*Response, error) {

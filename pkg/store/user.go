@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"github.com/muratdemir0/faceit-task/internal/config"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -38,7 +39,7 @@ func (s UserStore) Create(ctx context.Context, cu *User) error {
 		InsertOne(ctx, cu)
 
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to create user")
 	}
 	return nil
 }
@@ -49,7 +50,7 @@ func (s UserStore) Update(ctx context.Context, u *User) error {
 		UpdateOne(ctx, u.ID, u)
 
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to update user")
 	}
 	return nil
 }
@@ -60,7 +61,7 @@ func (s UserStore) Delete(ctx context.Context, userID string) error {
 		Collection(s.config.Collections.Users).
 		DeleteOne(ctx, bson.D{{"_id", userID}})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to delete user")
 	}
 	return nil
 }
@@ -72,7 +73,7 @@ func (s UserStore) Get(ctx context.Context, userID string) (User, error) {
 		FindOne(ctx, bson.D{{"_id", userID}}).
 		Decode(user)
 	if err != nil {
-		return User{}, err
+		return User{}, errors.Wrap(err, "failed to get user")
 	}
 	return user, nil
 }
@@ -96,12 +97,12 @@ func (s UserStore) List(ctx context.Context, criteria ListCriteria) ([]User, err
 		Collection(s.config.Collections.Users).
 		Find(ctx, filter, o)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to list users")
 	}
 	defer cursor.Close(ctx)
 	cursorErr := cursor.All(ctx, &users)
 	if cursorErr != nil {
-		return nil, cursorErr
+		return nil, errors.Wrap(cursorErr, "failed to get users from cursor")
 	}
 
 	return users, nil
