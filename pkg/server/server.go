@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/muratdemir0/faceit-task/pkg/errors"
 	"go.uber.org/zap"
 	"os"
 	"os/signal"
@@ -19,7 +20,7 @@ type Server struct {
 }
 
 func New(port string, handlers []Handler, logger *zap.Logger) Server {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{ErrorHandler: errors.Handler(logger)})
 	server := Server{app: app, port: port, logger: logger}
 	server.addRoutes()
 

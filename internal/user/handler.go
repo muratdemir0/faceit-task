@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"github.com/gofiber/fiber/v2"
+	"github.com/muratdemir0/faceit-task/pkg/errors"
 	"net/http"
 )
 
@@ -31,11 +32,11 @@ func (h Handler) RegisterRoutes(app *fiber.App) {
 func (h Handler) Create(ctx *fiber.Ctx) error {
 	createUserReq := CreateUserRequest{}
 	if err := ctx.BodyParser(&createUserReq); err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(err)
+		return errors.BadRequest("")
 	}
 	err := h.service.Create(ctx.Context(), &createUserReq)
 	if err != nil {
-		return ctx.Status(http.StatusInternalServerError).JSON(err)
+		return errors.InternalServerError("")
 	}
 	return ctx.Status(http.StatusCreated).JSON(DefaultResponse{})
 }
@@ -44,11 +45,11 @@ func (h Handler) Update(ctx *fiber.Ctx) error {
 	updateUserReq := UpdateUserRequest{}
 	userID := ctx.Params("userID")
 	if err := ctx.BodyParser(&updateUserReq); err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(err)
+		return errors.BadRequest("")
 	}
 	err := h.service.Update(ctx.Context(), userID, &updateUserReq)
 	if err != nil {
-		return ctx.Status(http.StatusInternalServerError).JSON(err)
+		return errors.InternalServerError("")
 	}
 	return ctx.Status(http.StatusOK).JSON(DefaultResponse{})
 }
@@ -57,7 +58,7 @@ func (h Handler) Delete(ctx *fiber.Ctx) error {
 	userID := ctx.Params("userID")
 	err := h.service.Delete(ctx.Context(), userID)
 	if err != nil {
-		return ctx.Status(http.StatusInternalServerError).JSON(err)
+		return errors.InternalServerError("")
 	}
 	return ctx.Status(http.StatusOK).JSON(DefaultResponse{})
 }
@@ -65,11 +66,11 @@ func (h Handler) Delete(ctx *fiber.Ctx) error {
 func (h Handler) List(ctx *fiber.Ctx) error {
 	params := &ListUserRequest{}
 	if err := ctx.QueryParser(params); err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(err)
+		return errors.BadRequest("")
 	}
 	users, err := h.service.List(ctx.Context(), params)
 	if err != nil {
-		return ctx.Status(http.StatusInternalServerError).JSON(err)
+		return errors.InternalServerError("")
 	}
 	return ctx.Status(http.StatusOK).JSON(DefaultResponse{Data: users})
 }

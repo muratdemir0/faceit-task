@@ -8,7 +8,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/muratdemir0/faceit-task/internal/user"
 	mocks "github.com/muratdemir0/faceit-task/mocks/user"
+	err "github.com/muratdemir0/faceit-task/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -251,7 +253,7 @@ func TestHandler_ListHandler(t *testing.T) {
 }
 
 func createTestApp() *fiber.App {
-	return fiber.New()
+	return fiber.New(fiber.Config{ErrorHandler: err.Handler(zap.NewNop())})
 }
 
 func NewHTTPRequestWithJSON(method, url string, request interface{}) *http.Request {
