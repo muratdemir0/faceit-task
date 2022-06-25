@@ -52,20 +52,13 @@ func run() error {
 		return err
 	}
 
-	fmt.Println("Successfully connected and pinged.")
-
-	u, err := uuid.NewUUID()
-	if err != nil {
-		return err
-	}
-
 	producer, producerErr := event.NewProducer(conf.Kafka.URL)
 	if producerErr != nil {
 		return err
 	}
 
 	userStore := store.NewUserStore(mongoClient, &conf.Mongo)
-	userService := user.NewService(userStore, producer, u)
+	userService := user.NewService(userStore, producer, generateUUIDFn)
 	userHandler := user.NewHandler(userService)
 
 	handlers := []server.Handler{userHandler}
@@ -83,3 +76,5 @@ func run() error {
 	s.Stop()
 	return nil
 }
+
+func generateUUIDFn() string { return uuid.New().String() }
