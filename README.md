@@ -5,7 +5,7 @@ The web service store user data in a database
 ## Contents
 
 - Getting Started
-    - [Build With](#Build With)
+    - [Build With](#build-with)
     - [Requirements](#requirements)
     - [Setup](#set-up)
     - [Usage of Makefile](#usage-of-makefile)
