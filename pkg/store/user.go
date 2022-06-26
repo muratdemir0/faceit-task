@@ -2,9 +2,11 @@ package store
 
 import (
 	"context"
+	"fmt"
 	"github.com/muratdemir0/faceit-task/internal/config"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -16,13 +18,13 @@ type UserStore struct {
 	config *config.Mongo
 }
 type User struct {
-	ID        string `json:"id" bson:"_id"`
-	FirstName string `json:"first_name" bson:"first_name"`
-	LastName  string `json:"last_name" bson:"last_name"`
-	Nickname  string `json:"nickname" bson:"nickname"`
-	Password  string `json:"password" json:"password"`
-	Email     string `json:"email" bson:"email"`
-	Country   string `json:"country" bson:"country"`
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	FirstName string             `json:"first_name" bson:"first_name"`
+	LastName  string             `json:"last_name" bson:"last_name"`
+	Nickname  string             `json:"nickname" bson:"nickname"`
+	Password  string             `json:"password" json:"password"`
+	Email     string             `json:"email" bson:"email"`
+	Country   string             `json:"country" bson:"country"`
 }
 type ListCriteria struct {
 	Country string `json:"country" bson:"country"`
@@ -34,23 +36,24 @@ func NewUserStore(client *mongo.Client, config *config.Mongo) UserStore {
 	return UserStore{client: client, config: config}
 }
 
-func (s UserStore) Create(ctx context.Context, cu *User) error {
-	_, err := s.client.
+func (s UserStore) Create(ctx context.Context, cu *User) (string, error) {
+	insertResult, err := s.client.
 		Database(s.config.Name).
 		Collection(s.config.Collections.Users).
 		InsertOne(ctx, cu)
 
 	if err != nil {
-		return errors.Wrap(err, "failed to create user")
+		fmt.Println(err)
+		return "", errors.Wrap(err, "failed to create user")
 	}
-	return nil
+	return insertResult.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 func (s UserStore) Update(ctx context.Context, u *User) error {
 	_, err := s.client.
 		Database(s.config.Name).
 		Collection(s.config.Collections.Users).
-		UpdateOne(ctx, u.ID, u)
-
+		ReplaceOne(ctx, bson.D{{"_id", u.ID}}, u)
+	fmt.Println("store", err)
 	if err != nil {
 		return errors.Wrap(err, "failed to update user")
 	}
@@ -58,10 +61,14 @@ func (s UserStore) Update(ctx context.Context, u *User) error {
 }
 
 func (s UserStore) Delete(ctx context.Context, userID string) error {
+	objectID, primitiveErr := primitive.ObjectIDFromHex(userID)
+	if primitiveErr != nil {
+		return errors.Wrap(primitiveErr, "object id from hex error")
+	}
 	_, err := s.client.
 		Database(s.config.Name).
 		Collection(s.config.Collections.Users).
-		DeleteOne(ctx, bson.D{{"_id", userID}})
+		DeleteOne(ctx, bson.D{{"_id", objectID}})
 	if err != nil {
 		return errors.Wrap(err, "failed to delete user")
 	}
@@ -69,11 +76,15 @@ func (s UserStore) Delete(ctx context.Context, userID string) error {
 }
 func (s UserStore) Get(ctx context.Context, userID string) (User, error) {
 	user := User{}
+	objectID, primitiveErr := primitive.ObjectIDFromHex(userID)
+	if primitiveErr != nil {
+		return user, errors.Wrap(primitiveErr, "object id from hex error")
+	}
 	err := s.client.
 		Database(s.config.Name).
 		Collection(s.config.Collections.Users).
-		FindOne(ctx, bson.D{{"_id", userID}}).
-		Decode(user)
+		FindOne(ctx, bson.D{{"_id", objectID}}).
+		Decode(&user)
 	if err != nil {
 		return User{}, errors.Wrap(NotFoundError, "failed to get user")
 	}

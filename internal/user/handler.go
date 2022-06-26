@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/muratdemir0/faceit-task/pkg/errors"
 	"net/http"
@@ -48,6 +49,7 @@ func (h Handler) Update(ctx *fiber.Ctx) error {
 		return errors.BadRequest("")
 	}
 	err := h.service.Update(ctx.Context(), userID, &updateUserReq)
+	fmt.Println(userID)
 	if err != nil {
 		return errors.InternalServerError("")
 	}

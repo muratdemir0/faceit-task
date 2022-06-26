@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/gofiber/fiber/v2"
+	"github.com/muratdemir0/faceit-task/pkg/store"
 	errs "github.com/pkg/errors"
 	"net/http"
 )
@@ -28,6 +29,9 @@ func makeResponse(err error) ErrorResponse {
 		return errorResponse
 	}
 	if errors.Is(err, sql.ErrNoRows) {
+		return NotFound("")
+	}
+	if errors.Is(err, store.NotFoundError) {
 		return NotFound("")
 	}
 	if errors.Is(err, fiber.ErrMethodNotAllowed) {

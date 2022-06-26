@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/muratdemir0/faceit-task/internal/config"
 	"github.com/muratdemir0/faceit-task/internal/user"
 	"github.com/muratdemir0/faceit-task/pkg/event"
@@ -58,7 +57,7 @@ func run() error {
 	}
 
 	userStore := store.NewUserStore(mongoClient, &conf.Mongo)
-	userService := user.NewService(userStore, producer, generateUUIDFn)
+	userService := user.NewService(userStore, producer)
 	userHandler := user.NewHandler(userService)
 
 	handlers := []server.Handler{userHandler}
@@ -76,5 +75,3 @@ func run() error {
 	s.Stop()
 	return nil
 }
-
-func generateUUIDFn() string { return uuid.New().String() }

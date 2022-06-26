@@ -2,12 +2,13 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"github.com/muratdemir0/faceit-task/pkg/store"
 	"github.com/pkg/errors"
 )
 
 type Store interface {
-	Create(ctx context.Context, u *store.User) error
+	Create(ctx context.Context, u *store.User) (string, error)
 	Update(ctx context.Context, u *store.User) error
 	Delete(ctx context.Context, userID string) error
 	Get(ctx context.Context, userID string) (store.User, error)
@@ -18,21 +19,17 @@ type Producer interface {
 	Produce(ctx context.Context, topic string, message interface{}) error
 }
 
-type GenerateUUID func() string
-
 type service struct {
-	store      Store
-	producer   Producer
-	generateID GenerateUUID
+	store    Store
+	producer Producer
 }
 
-func NewService(store Store, producer Producer, uuidGenerator GenerateUUID) Service {
-	return &service{store: store, producer: producer, generateID: uuidGenerator}
+func NewService(store Store, producer Producer) Service {
+	return &service{store: store, producer: producer}
 }
 
 func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 	user := &store.User{
-		ID:        s.generateID(),
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Nickname:  req.Nickname,
@@ -40,12 +37,12 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 		Email:     req.Email,
 		Country:   req.Country,
 	}
-	err := s.store.Create(ctx, user)
+	userID, err := s.store.Create(ctx, user)
 	if err != nil {
 		return err
 	}
 	kafkaErr := s.producer.Produce(ctx, KafkaUserCreatedTopic, Event{
-		UserID:    user.ID,
+		UserID:    userID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
@@ -58,7 +55,7 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 
 func (s service) Update(ctx context.Context, userID string, req *UpdateUserRequest) error {
 	u, getErr := s.store.Get(ctx, userID)
-
+	fmt.Println("getErr: ", getErr)
 	if getErr != nil {
 		return errors.Wrap(getErr, "failed to get user")
 	}
@@ -73,12 +70,13 @@ func (s service) Update(ctx context.Context, userID string, req *UpdateUserReque
 	}
 
 	err := s.store.Update(ctx, &u)
+	fmt.Println(err)
 	if err != nil {
 		return errors.Wrap(err, "failed to update user")
 	}
 
 	kafkaErr := s.producer.Produce(ctx, KafkaUserUpdatedTopic, Event{
-		UserID:    u.ID,
+		UserID:    userID,
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 		Email:     u.Email,
@@ -119,7 +117,7 @@ func (s service) List(ctx context.Context, criteria *ListUserRequest) (*Response
 
 	for _, user := range users {
 		usersResponse.Users = append(usersResponse.Users, User{
-			ID:        user.ID,
+			ID:        user.ID.Hex(),
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
 			Nickname:  user.Nickname,
