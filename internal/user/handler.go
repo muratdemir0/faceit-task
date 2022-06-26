@@ -2,9 +2,7 @@ package user
 
 import (
 	"context"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/muratdemir0/faceit-task/pkg/errors"
 	"net/http"
 )
 
@@ -32,12 +30,12 @@ func (h Handler) RegisterRoutes(app *fiber.App) {
 
 func (h Handler) Create(ctx *fiber.Ctx) error {
 	createUserReq := CreateUserRequest{}
-	if err := ctx.BodyParser(&createUserReq); err != nil {
-		return errors.BadRequest("")
+	if parserErr := ctx.BodyParser(&createUserReq); parserErr != nil {
+		return parserErr
 	}
 	err := h.service.Create(ctx.Context(), &createUserReq)
 	if err != nil {
-		return errors.InternalServerError("")
+		return err
 	}
 	return ctx.Status(http.StatusCreated).JSON(DefaultResponse{})
 }
@@ -45,13 +43,12 @@ func (h Handler) Create(ctx *fiber.Ctx) error {
 func (h Handler) Update(ctx *fiber.Ctx) error {
 	updateUserReq := UpdateUserRequest{}
 	userID := ctx.Params("userID")
-	if err := ctx.BodyParser(&updateUserReq); err != nil {
-		return errors.BadRequest("")
+	if parserErr := ctx.BodyParser(&updateUserReq); parserErr != nil {
+		return parserErr
 	}
 	err := h.service.Update(ctx.Context(), userID, &updateUserReq)
-	fmt.Println(userID)
 	if err != nil {
-		return errors.InternalServerError("")
+		return err
 	}
 	return ctx.Status(http.StatusOK).JSON(DefaultResponse{})
 }
@@ -60,19 +57,19 @@ func (h Handler) Delete(ctx *fiber.Ctx) error {
 	userID := ctx.Params("userID")
 	err := h.service.Delete(ctx.Context(), userID)
 	if err != nil {
-		return errors.InternalServerError("")
+		return err
 	}
 	return ctx.Status(http.StatusOK).JSON(DefaultResponse{})
 }
 
 func (h Handler) List(ctx *fiber.Ctx) error {
 	params := &ListUserRequest{}
-	if err := ctx.QueryParser(params); err != nil {
-		return errors.BadRequest("")
+	if parserErr := ctx.QueryParser(params); parserErr != nil {
+		return parserErr
 	}
 	users, err := h.service.List(ctx.Context(), params)
 	if err != nil {
-		return errors.InternalServerError("")
+		return err
 	}
 	return ctx.Status(http.StatusOK).JSON(DefaultResponse{Data: users})
 }

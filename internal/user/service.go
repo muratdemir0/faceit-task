@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 	"github.com/muratdemir0/faceit-task/pkg/store"
 	"github.com/pkg/errors"
 )
@@ -55,7 +54,6 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 
 func (s service) Update(ctx context.Context, userID string, req *UpdateUserRequest) error {
 	u, getErr := s.store.Get(ctx, userID)
-	fmt.Println("getErr: ", getErr)
 	if getErr != nil {
 		return errors.Wrap(getErr, "failed to get user")
 	}
@@ -70,7 +68,6 @@ func (s service) Update(ctx context.Context, userID string, req *UpdateUserReque
 	}
 
 	err := s.store.Update(ctx, &u)
-	fmt.Println(err)
 	if err != nil {
 		return errors.Wrap(err, "failed to update user")
 	}

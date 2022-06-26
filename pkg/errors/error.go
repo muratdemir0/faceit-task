@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"database/sql"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/muratdemir0/faceit-task/pkg/store"
@@ -27,9 +26,6 @@ func makeResponse(err error) ErrorResponse {
 	var errorResponse ErrorResponse
 	if errs.As(err, &errorResponse) {
 		return errorResponse
-	}
-	if errors.Is(err, sql.ErrNoRows) {
-		return NotFound("")
 	}
 	if errors.Is(err, store.NotFoundError) {
 		return NotFound("")
