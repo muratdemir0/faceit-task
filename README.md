@@ -24,9 +24,9 @@ The web service store user data in a database
 
 ## Usage of Makefile
 
-|Command| Description                                                                           |
-|-------|---------------------------------------------------------------------------------------|
+|Command| Description                                                                                          |
+|-------|------------------------------------------------------------------------------------------------------|
 | up | This command will be opening Docker and preparing web service. It will be running on `localhost:3001` |
-| run | Web service is ran by this command. It will be running on `localhost:3001`            |
-| unit-test | Run tests                                                                             |
-| generate-mocks | Command is created mock files if it is needed.                                        |
+| run | Web service is ran by this command. It will be running on `localhost:3001`                           |
+| unit-test | Run tests                                                                                            |
+| generate-mocks | Mocks are created by this command if it is needed.                              |
