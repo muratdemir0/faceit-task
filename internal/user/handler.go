@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"github.com/gofiber/fiber/v2"
+	"github.com/muratdemir0/faceit-task/pkg/errors"
 	"net/http"
 )
 
@@ -31,7 +32,7 @@ func (h Handler) RegisterRoutes(app *fiber.App) {
 func (h Handler) Create(ctx *fiber.Ctx) error {
 	createUserReq := CreateUserRequest{}
 	if parserErr := ctx.BodyParser(&createUserReq); parserErr != nil {
-		return parserErr
+		return errors.BadRequest("Invalid request body")
 	}
 	err := h.service.Create(ctx.Context(), &createUserReq)
 	if err != nil {
@@ -44,7 +45,7 @@ func (h Handler) Update(ctx *fiber.Ctx) error {
 	updateUserReq := UpdateUserRequest{}
 	userID := ctx.Params("userID")
 	if parserErr := ctx.BodyParser(&updateUserReq); parserErr != nil {
-		return parserErr
+		return errors.BadRequest("Invalid request body")
 	}
 	err := h.service.Update(ctx.Context(), userID, &updateUserReq)
 	if err != nil {
@@ -65,7 +66,7 @@ func (h Handler) Delete(ctx *fiber.Ctx) error {
 func (h Handler) List(ctx *fiber.Ctx) error {
 	params := &ListUserRequest{}
 	if parserErr := ctx.QueryParser(params); parserErr != nil {
-		return parserErr
+		return errors.BadRequest("Invalid request body")
 	}
 	users, err := h.service.List(ctx.Context(), params)
 	if err != nil {
