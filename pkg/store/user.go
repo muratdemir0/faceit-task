@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"fmt"
 	"github.com/muratdemir0/faceit-task/internal/config"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -43,7 +42,6 @@ func (s UserStore) Create(ctx context.Context, cu *User) (string, error) {
 		InsertOne(ctx, cu)
 
 	if err != nil {
-		fmt.Println(err)
 		return "", errors.Wrap(err, "failed to create user")
 	}
 	return insertResult.InsertedID.(primitive.ObjectID).Hex(), nil
@@ -53,7 +51,6 @@ func (s UserStore) Update(ctx context.Context, u *User) error {
 		Database(s.config.Name).
 		Collection(s.config.Collections.Users).
 		ReplaceOne(ctx, bson.D{{"_id", u.ID}}, u)
-	fmt.Println("store", err)
 	if err != nil {
 		return errors.Wrap(err, "failed to update user")
 	}
