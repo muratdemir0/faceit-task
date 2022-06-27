@@ -18,7 +18,7 @@ The web service store user data in a database
 ### Requirements
 
 - [Docker](https://www.docker.com/products/docker-desktop)
-- REST client [Postman](https://www.getpostman.com/collections/fb130c44909e4765760c) you can import collection to
+- REST client [Postman](https://www.getpostman.com/collections/0610ec06bc50c62cf9a6) you can import collection to
   Postman via link.
 
 ## Usage of Makefile
