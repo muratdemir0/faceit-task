@@ -26,6 +26,9 @@ func Test_New(t *testing.T) {
 					Users: "users",
 				},
 			},
+			Kafka: config.Kafka{
+				URL: "kafka:9092",
+			},
 		}
 
 		assert.Equal(t, expectedConfig, actualConfig)

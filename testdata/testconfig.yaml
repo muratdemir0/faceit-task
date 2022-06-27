@@ -7,3 +7,5 @@ mongo:
   port: 27017
   collections:
     users: "users"
+kafka:
+  url: "kafka:9092"
