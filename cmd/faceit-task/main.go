@@ -57,7 +57,7 @@ func run() error {
 	}
 
 	userStore := store.NewUserStore(mongoClient, &conf.Mongo)
-	userService := user.NewService(userStore, producer)
+	userService := user.NewService(userStore, producer, logger)
 	userHandler := user.NewHandler(userService)
 
 	handlers := []server.Handler{userHandler}

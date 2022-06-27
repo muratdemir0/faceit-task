@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/muratdemir0/faceit-task/pkg/store"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type Store interface {
@@ -21,10 +22,11 @@ type Producer interface {
 type service struct {
 	store    Store
 	producer Producer
+	logger   *zap.Logger
 }
 
-func NewService(store Store, producer Producer) Service {
-	return &service{store: store, producer: producer}
+func NewService(store Store, producer Producer, logger *zap.Logger) Service {
+	return &service{store: store, producer: producer, logger: logger}
 }
 
 func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
@@ -38,6 +40,7 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 	}
 	userID, err := s.store.Create(ctx, user)
 	if err != nil {
+		s.logger.Error("failed to create user", zap.Error(err))
 		return err
 	}
 	kafkaErr := s.producer.Produce(ctx, KafkaUserCreatedTopic, Event{
@@ -47,6 +50,7 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 		Email:     user.Email,
 	})
 	if kafkaErr != nil {
+		s.logger.Error("failed to produce user created event", zap.Any("user", user))
 		return errors.Wrap(kafkaErr, "failed to produce user created event")
 	}
 	return nil
@@ -55,6 +59,7 @@ func (s service) Create(ctx context.Context, req *CreateUserRequest) error {
 func (s service) Update(ctx context.Context, userID string, req *UpdateUserRequest) error {
 	u, getErr := s.store.Get(ctx, userID)
 	if getErr != nil {
+		s.logger.Error("failed to get user", zap.Error(getErr))
 		return errors.Wrap(getErr, "failed to get user")
 	}
 
@@ -69,6 +74,7 @@ func (s service) Update(ctx context.Context, userID string, req *UpdateUserReque
 
 	err := s.store.Update(ctx, &u)
 	if err != nil {
+		s.logger.Error("failed to update user", zap.Any("userId", userID), zap.Any("request", req))
 		return errors.Wrap(err, "failed to update user")
 	}
 
@@ -80,6 +86,7 @@ func (s service) Update(ctx context.Context, userID string, req *UpdateUserReque
 	})
 
 	if kafkaErr != nil {
+		s.logger.Error("failed to produce user updated event", zap.Any("userId", userID))
 		return errors.Wrap(kafkaErr, "failed to produce user updated event")
 	}
 	return nil
@@ -88,12 +95,14 @@ func (s service) Update(ctx context.Context, userID string, req *UpdateUserReque
 func (s service) Delete(ctx context.Context, userID string) error {
 	err := s.store.Delete(ctx, userID)
 	if err != nil {
+		s.logger.Error("failed to delete user", zap.Error(err))
 		return err
 	}
 	kafkaErr := s.producer.Produce(ctx, KafkaUserDeletedTopic, Event{
 		UserID: userID,
 	})
 	if kafkaErr != nil {
+		s.logger.Error("failed to produce user deleted event", zap.Any("userId", userID))
 		return errors.Wrap(kafkaErr, "failed to produce user deleted event")
 	}
 	return nil
@@ -107,6 +116,7 @@ func (s service) List(ctx context.Context, criteria *ListUserRequest) (*Response
 	}
 	users, err := s.store.List(ctx, c)
 	if err != nil {
+		s.logger.Error("failed to list users", zap.Error(err))
 		return nil, err
 	}
 

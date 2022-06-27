@@ -11,6 +11,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 	"testing"
 )
 
@@ -39,7 +40,7 @@ func TestService_Create(t *testing.T) {
 				Country:   cur.Country,
 			}
 			mockUserStore.EXPECT().Create(gomock.Any(), cu).Return(insertedID, nil)
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			err := service.Create(context.TODO(), cur)
 			Convey("Then user should be created", func() {
 				So(err, ShouldBeNil)
@@ -81,7 +82,7 @@ func TestService_Create(t *testing.T) {
 				Country:   cur.Country,
 			}
 			mockUserStore.EXPECT().Create(gomock.Any(), cu).Return("", errors.New("error"))
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			err := service.Create(context.TODO(), cur)
 			Convey("Then repo should be return an error", func() {
 				So(err, ShouldNotBeNil)
@@ -116,7 +117,7 @@ func TestService_Update(t *testing.T) {
 			}
 			mockUserStore.EXPECT().Get(gomock.Any(), userID).Return(expectedUser, nil)
 			mockUserStore.EXPECT().Update(gomock.Any(), &expectedUser).Return(nil)
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			err := service.Update(context.TODO(), userID, updateUserReq)
 			Convey("Then user should be updated", func() {
 				So(err, ShouldBeNil)
@@ -149,7 +150,7 @@ func TestService_Update(t *testing.T) {
 		}
 		Convey("When repo's update method is called", func() {
 			mockUserStore.EXPECT().Get(gomock.Any(), userID).Return(store.User{}, errors.Wrap(store.NotFoundError, "failed to get user"))
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			err := service.Update(context.TODO(), userID, updateUserReq)
 			expectedError := errors.Wrap(errors.Wrap(store.NotFoundError, "failed to get user"), "failed to get user")
 			Convey("Then repo should return an error which is not found", func() {
@@ -182,7 +183,7 @@ func TestService_Update(t *testing.T) {
 			}
 			mockUserStore.EXPECT().Get(gomock.Any(), userID).Return(expectedUser, nil)
 			mockUserStore.EXPECT().Update(gomock.Any(), &expectedUser).Return(errors.New("error"))
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			err := service.Update(context.TODO(), userID, updateUserReq)
 			Convey("Then repo should return an error which is not found", func() {
 				So(err, ShouldNotBeNil)
@@ -214,7 +215,7 @@ func TestService_Update(t *testing.T) {
 			}
 			mockUserStore.EXPECT().Get(gomock.Any(), userID).Return(expectedUser, nil)
 			mockUserStore.EXPECT().Update(gomock.Any(), &expectedUser).Return(nil)
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			err := service.Update(context.TODO(), userID, updateUserReq)
 			Convey("Then repo should not return an error", func() {
 				So(err, ShouldBeNil)
@@ -232,7 +233,7 @@ func TestService_Delete(t *testing.T) {
 		mockProducer := producerMock.NewEventProducerMock()
 		Convey("When repo's delete method is called", func() {
 			mockUserStore.EXPECT().Delete(gomock.Any(), userID).Return(nil)
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			err := service.Delete(context.TODO(), userID)
 			Convey("Then repo should be deleted", func() {
 				So(err, ShouldBeNil)
@@ -254,7 +255,7 @@ func TestService_Delete(t *testing.T) {
 		mockProducer := producerMock.NewEventProducerMock()
 		Convey("When repo's delete method is called", func() {
 			mockUserStore.EXPECT().Delete(gomock.Any(), userID).Return(errors.New("error"))
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			err := service.Delete(context.TODO(), userID)
 			Convey("Then repo should return an error", func() {
 				So(err, ShouldNotBeNil)
@@ -302,7 +303,7 @@ func TestService_List(t *testing.T) {
 		}
 		Convey("When repo's findBy method is called", func() {
 			mockUserStore.EXPECT().List(gomock.Any(), findUserStore).Return(users, nil)
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			actualResponse, _ := service.List(context.TODO(), &req)
 			Convey("Then repo should return users", func() {
 				So(actualResponse, ShouldResemble, &expectedResponse)
@@ -323,7 +324,7 @@ func TestService_List(t *testing.T) {
 		}
 		Convey("When repo's findBy method is called", func() {
 			mockUserStore.EXPECT().List(gomock.Any(), findUserStore).Return(nil, errors.New("error"))
-			service := user.NewService(mockUserStore, mockProducer)
+			service := user.NewService(mockUserStore, mockProducer, zap.NewNop())
 			_, err := service.List(context.TODO(), &req)
 			Convey("Then repo should return users", func() {
 				So(err, ShouldNotBeNil)
